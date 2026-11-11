@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <package_name>sample-app</package_name>
+    <repository>APKINDEX</repository>
+    <test_mode>true</test_mode>
+    <package_version>2.0-r0</package_version>
+    <output_file>dependencies.svg</output_file>
+    <max_depth>0</max_depth>
+    <filter_substring>sample</filter_substring>
+</config>

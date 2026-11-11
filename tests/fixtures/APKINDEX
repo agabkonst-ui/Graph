@@ -1,0 +1,14 @@
+P:sample-app
+V:1.0-r0
+D:old-lib
+
+P:sample-app
+V:2.0-r0
+D:sample-lib>=1.2-r0 so:libsample.so.1 cmd:sample-helper !old-lib
+
+P:sample-lib
+V:1.2-r0
+D:transitive-lib
+
+P:transitive-lib
+V:1.0-r0

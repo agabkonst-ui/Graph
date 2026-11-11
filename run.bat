@@ -1,12 +1,8 @@
 @echo off
-setlocal
-cd /d "%~dp0"
-set PYTHONPATH=%~dp0src
-set PYTHONUTF8=1
-set PYTHONDONTWRITEBYTECODE=1
-if defined PYTHON_EXE (
-    "%PYTHON_EXE%" -B -m graph_tool %*
-    exit /b
+py -3 -c "import sys" >nul 2>&1
+if errorlevel 1 (
+    python -B -X utf8 "%~dp0src\main.py" %*
+) else (
+    py -3 -B -X utf8 "%~dp0src\main.py" %*
 )
-py -3 -B -m graph_tool %*
 exit /b %errorlevel%

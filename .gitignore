@@ -22,3 +22,12 @@ Thumbs.db
 *.apk
 *.bundle
 *.svg
+Python/
+*.7z
+*.gz
+*.exe
+*.dll
+*.pyd
+*.so
+*.pdf
+*.png

@@ -4,7 +4,7 @@
   <repository>../examples/test_repository.txt</repository>
   <test_mode>true</test_mode>
   <package_version>1.0</package_version>
-  <output_file>../graph.svg</output_file>
+  <output_file>graph.svg</output_file>
   <max_depth>3</max_depth>
   <filter_substring>SKIP</filter_substring>
 </config>

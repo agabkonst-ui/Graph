@@ -127,7 +127,7 @@ class ApkTests(unittest.TestCase):
     def test_cli_prints_only_direct_dependencies(self):
         """Run the CLI and compare the output against the direct edges."""
         result = subprocess.run(
-            [sys.executable, "-B", "-X", "utf8", "src/main.py",
+            [sys.executable, "-B", "-X", "utf8", "src/main.py", "--direct",
              str(FIXTURES / "config.xml")],
             cwd=PROJECT, capture_output=True, encoding="utf-8", check=True,
         )

@@ -13,7 +13,7 @@ from urllib.request import urlopen
 INDEX_ARCHIVE = "APKINDEX.tar.gz"
 INDEX_MEMBER = "APKINDEX"
 PACKAGE_MEMBER = ".PKGINFO"
-INDEX_FIELDS = {"P", "V", "D"}
+INDEX_FIELDS = {"P", "V", "D", "p", "C"}
 NETWORK_TIMEOUT = 20
 
 
@@ -94,22 +94,35 @@ def remote_metadata(url, member_name):
         return None
 
 
-def remote_dependencies(repository, name, version):
-    """Search the index, then try the exact .apk file if needed."""
-    location = repository.rstrip("/")
-    index_suffix = f"/{INDEX_ARCHIVE}"
-    directory = location.removesuffix(index_suffix)
-    index = remote_metadata(directory + index_suffix, INDEX_MEMBER)
-    if index is not None:
-        dependencies = index_dependencies(index, name, version)
-        if dependencies is not None:
-            return dependencies
+def repository_directory(repository):
+    """Accept either a repository directory or its index URL."""
+    return repository.rstrip("/").removesuffix(f"/{INDEX_ARCHIVE}")
 
+
+def fetch_index(directory):
+    """Fetch the repository index once, or return None for a missing index."""
+    return remote_metadata(f"{directory}/{INDEX_ARCHIVE}", INDEX_MEMBER)
+
+
+def fetch_package(directory, name, version):
+    """Read the dependencies of an exact package archive."""
     filename = quote(f"{name}-{version}.apk")
     package = remote_metadata(f"{directory}/{filename}", PACKAGE_MEMBER)
     if package is not None:
         return package_dependencies(package, name, version)
     return None
+
+
+def remote_dependencies(repository, name, version):
+    """Search the index, then try the exact .apk file if needed."""
+    directory = repository_directory(repository)
+    index = fetch_index(directory)
+    if index is not None:
+        dependencies = index_dependencies(index, name, version)
+        if dependencies is not None:
+            return dependencies
+
+    return fetch_package(directory, name, version)
 
 
 def get_dependencies(config):

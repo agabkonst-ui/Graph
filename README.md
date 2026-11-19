@@ -1,7 +1,8 @@
 # Анализатор зависимостей Alpine Linux
 
-Конфигурационное управление. Вариант 1, этап 4 «Дополнительные операции».
-Программа строит граф зависимостей и находит пакеты, зависящие от заданного.
+Конфигурационное управление. Вариант 1, этап 5 «Визуализация».
+Программа строит граф зависимостей, находит обратные зависимости
+и экспортирует граф в PlantUML и SVG.
 В обычном режиме она читает индекс репозитория Alpine Linux по URL, в тестовом
 режиме — текстовое описание графа. Используется стандартная библиотека Python.
 
@@ -16,6 +17,7 @@
 | Граф из локального файла | `.\run.bat config/default.xml` | `sh run.sh config/default.xml` |
 | Прямые зависимости, вывод этапа 2 | `.\run.bat --direct` | `sh run.sh --direct` |
 | Обратные зависимости, этап 4 | `.\run.bat --reverse` | `sh run.sh --reverse` |
+| Экспорт графа, этап 5 | `.\run.bat --visualize` | `sh run.sh --visualize` |
 | Автотесты без интернета | `.\test.bat` | `sh test.sh` |
 
 В Windows скрипты запуска, тестов и демонстрации принимают путь к Python
@@ -42,7 +44,7 @@ $env:PYTHON_EXE = (Get-Command python).Source
 | `repository` | URL каталога Alpine для одной архитектуры, URL `APKINDEX.tar.gz` или путь к тестовому файлу. |
 | `test_mode` | `true` для локального файла, `false` для сетевого репозитория. |
 | `package_version` | Точная версия исходного APK. В тестовом графе версии отсутствуют, но поле обязательно. |
-| `output_file` | Имя SVG-файла для этапа 5. На этапе 3 граф выводится в консоль. |
+| `output_file` | Имя SVG-файла рядом с XML. Исходник PlantUML имеет то же имя и расширение `.puml`. |
 | `max_depth` | Целое число от 0. У исходного пакета глубина 0. |
 | `filter_substring` | Подстрока имени пакета с учётом регистра. Пустое поле отключает фильтр. |
 
@@ -137,6 +139,70 @@ HIDDEN. Рёбра B → D, C → D и D → A сохраняются.
 
 В Linux/macOS замените `.\run.bat` на `sh run.sh`; аргументы те же.
 
+## Визуализация
+
+Для экспорта установите Java и скачайте JAR с
+[официальной страницы PlantUML](https://plantuml.com/download).
+В проверке использовались Java 17 и PlantUML 1.2026.10. Храните JAR вне
+репозитория. PlantUML запускается локально, использует встроенный движок
+Smetana и не требует Graphviz для экспорта SVG.
+
+```powershell
+$env:PLANTUML_JAR = 'C:\Tools\plantuml.jar'
+# Если команда java не работает, укажите путь к рабочему java.exe.
+# $env:JAVA_EXE = 'C:\Tools\Java\bin\java.exe'
+.\run.bat --visualize config/stage3-cycle.xml
+```
+
+Команда создаёт `config/graph.puml` и `config/graph.svg`.
+Стрелка идёт от пакета к его зависимости. Экспорт использует граф BFS
+с выбранными глубиной и фильтром, сохраняет циклы и вершины без рёбер.
+Оба файла обновляются при повторном запуске. Git игнорирует файлы экспорта.
+
+Воспроизводимые примеры для Alpine v3.22, main, x86_64:
+
+```powershell
+.\run.bat --visualize config/stage5-7zip.xml
+.\run.bat --visualize config/stage5-jq.xml
+.\run.bat --visualize config/stage5-tree.xml
+```
+
+Откройте в браузере `config/7zip.svg`, `config/jq.svg` и `config/tree.svg`.
+В Linux/macOS задайте `export PLANTUML_JAR=/path/to/plantuml.jar`
+и замените `.\run.bat` на `sh run.sh`. Версии в XML зафиксированы для
+сопоставления результатов. Если зеркало обновило пакет, сверьте версию
+с индексом Alpine перед повторением примера.
+
+### Сравнение с Alpine APK
+
+Эталон — команда [`apk dot`][apk-dot], которая выводит граф в формате DOT.
+Проверка выполнена штатным apk-tools 2.14.13 с тем же индексом Alpine.
+
+| Пакет | Непосредственные зависимости по именам пакетов | Рёбра во всём графе |
+| --- | --- | --- |
+| `7zip=24.09-r0` | musl, libgcc, libstdc++ | 6 из 6 совпали |
+| `jq=1.8.2-r0` | musl, oniguruma | 3 из 3 совпали |
+| `tree=2.2.1-r0` | musl | 1 из 1 совпало |
+
+Сравнивались пары «пакет и версия → зависимость и версия». Порядок
+рёбер, оформление и размещение вершин могут различаться. В DOT на
+рёбрах также показаны исходные требования, например `so:libonig.so.5`,
+а SVG подписывает вершины выбранными именами и версиями пакетов.
+Ограничение глубины и фильтр в XML могут сократить граф программы.
+В примерах глубины 8 достаточно для полного графа, фильтр пустой.
+
+Чтобы повторить сравнение в Alpine Linux на x86_64 с тем же репозиторием:
+
+```sh
+printf '%s\n' 'https://dl-cdn.alpinelinux.org/alpine/v3.22/main' > /tmp/graph-repositories
+for pkg in 7zip jq tree; do
+    apk --no-cache --repositories-file /tmp/graph-repositories dot "$pkg" > "$pkg.dot"
+done
+```
+
+Если установлен Graphviz, `dot -Tsvg 7zip.dot -o 7zip-apk.svg` превратит
+эталонный DOT в изображение. Команда apk используется только для сравнения.
+
 ## Исходный код
 
 - `src/main.py` читает аргументы и запускает выбранный режим.
@@ -145,6 +211,7 @@ HIDDEN. Рёбра B → D, C → D и D → A сохраняются.
 - `src/apk_graph.py` выбирает точную исходную версию и сопоставляет зависимости
   с пакетами из индекса. `src/apk_versions.py` сравнивает версии.
 - `src/local_graph.py` читает текстовое описание тестового графа.
+- `src/visualization.py` формирует PlantUML и вызывает локальный рендерер SVG.
 - `src/dependency_graph.py` строит индекс обратных рёбер, выполняет BFS
   и выводит граф или список обратных зависимостей.
 - `tests` содержит проверки CLI, конфигурации, обхода и чтения метаданных,
@@ -152,3 +219,4 @@ HIDDEN. Рёбра B → D, C → D и D → A сохраняются.
 
 [apk-metadata]: https://github.com/alpinelinux/apk-tools/blob/master/doc/apk-package.5.scd
 [apk-world]: https://github.com/alpinelinux/apk-tools/blob/master/doc/apk-world.5.scd
+[apk-dot]: https://github.com/alpinelinux/apk-tools/blob/master/doc/apk-dot.8.scd

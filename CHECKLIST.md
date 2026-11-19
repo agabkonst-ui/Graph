@@ -1,4 +1,4 @@
-# Проверка варианта 1, этапы 1–4
+# Проверка варианта 1, этапы 1–5
 
 Откройте терминал в корне Graph. Если Python не найден, задайте
 `PYTHON_EXE` согласно README. В PowerShell ставьте `.\` перед скриптом.
@@ -16,8 +16,11 @@
 | Этап 4: глубина 1 | `.\run.bat --reverse config/stage3-depth.xml` | Только D |
 | Этап 4: цепочка | `.\run.bat --reverse config/stage4-transitive.xml` | SKIP, C, A на глубинах 1, 2, 3 |
 | Этап 4: фильтр | `.\run.bat --reverse config/stage4-filter.xml` | Фильтр SKIP даёт пустой список |
+| Этап 5: экспорт | `.\run.bat --visualize config/stage5-7zip.xml` | PlantUML и SVG в `config/` |
+| Этап 5: демонстрация | Три команды из README | Графы для 7zip, jq и tree |
+| Этап 5: сравнение | `apk dot` для трёх пакетов | Совпали 6, 3 и 1 рёбер соответственно |
 | Автотесты | `.\test.bat` | OK |
-| Коммит этапа 4 | History в GitHub Desktop | `feat(graph): добавить поиск обратных зависимостей (4 этап)` |
+| Коммит этапа 5 | History в GitHub Desktop | `feat(graph): добавить экспорт в PlantUML и SVG (5 этап)` |
 | Публикация | Сайт Graph после Push origin | Файлы и коммит доступны публично |
 
 Проверка оформления поставки:

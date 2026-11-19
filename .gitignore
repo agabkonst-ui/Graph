@@ -22,6 +22,9 @@ Thumbs.db
 *.apk
 *.bundle
 *.svg
+*.puml
+*.dot
+*.jar
 Python/
 *.7z
 *.gz

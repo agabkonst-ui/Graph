@@ -10,7 +10,7 @@ from apk import (
     repository_directory,
 )
 from apk_versions import satisfies
-from dependency_graph import Package, excluded
+from dependency_graph import Package, excluded, reverse_neighbors
 
 
 REQUIREMENT = re.compile(r"([^<>=~]+)([<>=~]*)(.*)")
@@ -93,10 +93,12 @@ class ApkRepository:
                 yield target
 
 
-def remote_source(config):
+def remote_source(config, reverse=False):
     """Load one repository index and, if necessary, the exact root APK."""
     directory = repository_directory(config.repository)
     index = fetch_index(directory)
+    if reverse and index is None:
+        raise ValueError("Для обратного поиска нужен APKINDEX репозитория.")
     repository = ApkRepository(index or "")
     root = Package(config.package_name, config.package_version)
     if root not in repository.dependencies:
@@ -111,4 +113,10 @@ def remote_source(config):
         """Resolve one package's edges with the configured name filter."""
         return repository.neighbors(package, config.filter_substring)
 
+    if reverse:
+        packages = (
+            package for package in repository.dependencies
+            if not excluded(package.name, config.filter_substring)
+        )
+        return root, reverse_neighbors(packages, neighbors)
     return root, neighbors

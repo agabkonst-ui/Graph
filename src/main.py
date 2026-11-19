@@ -9,7 +9,9 @@ from xml.etree.ElementTree import ParseError
 from apk import get_dependencies
 from apk_graph import remote_source
 from config import load_config
-from dependency_graph import breadth_first, excluded, print_graph
+from dependency_graph import (
+    Package, breadth_first, excluded, print_graph, print_reverse,
+)
 from local_graph import TEST_NAME, local_source
 
 
@@ -23,9 +25,14 @@ def parse_arguments():
         "config", nargs="?", type=Path, default=DEFAULT_CONFIG,
         help="путь к XML-файлу, по умолчанию config.xml в корне проекта",
     )
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--direct", action="store_true",
         help="вывести прямые зависимости в режиме этапа 2",
+    )
+    mode.add_argument(
+        "--reverse", action="store_true",
+        help="вывести обратные зависимости в режиме этапа 4",
     )
     return parser.parse_args()
 
@@ -41,17 +48,24 @@ def print_direct(config):
         print(f"- {dependency}")
 
 
-def run_graph(config):
+def run_graph(config, reverse=False):
     """Build a graph from the configured remote or offline repository."""
     if config.test_mode and not TEST_NAME.fullmatch(config.package_name):
         raise ValueError("В тестовом графе package_name состоит из букв A–Z.")
     if excluded(config.package_name, config.filter_substring):
-        print_graph({}, {})
+        if reverse:
+            version = "" if config.test_mode else config.package_version
+            print_reverse(Package(config.package_name, version), {})
+        else:
+            print_graph({}, {})
         return
     source = local_source if config.test_mode else remote_source
-    root, neighbors = source(config)
+    root, neighbors = source(config, reverse=reverse)
     adjacency, depths = breadth_first(root, neighbors, config.max_depth)
-    print_graph(adjacency, depths)
+    if reverse:
+        print_reverse(root, depths)
+    else:
+        print_graph(adjacency, depths)
 
 
 def main():
@@ -59,8 +73,10 @@ def main():
     arguments = parse_arguments()
     try:
         config = load_config(arguments.config)
-        analyze = print_direct if arguments.direct else run_graph
-        analyze(config)
+        if arguments.direct:
+            print_direct(config)
+        else:
+            run_graph(config, reverse=arguments.reverse)
     except (HTTPException, OSError, ParseError, ValueError) as error:
         print(f"Ошибка: {error}", file=sys.stderr)
         return 1

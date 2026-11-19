@@ -1,4 +1,4 @@
-# Проверка этапа 1 варианта 1
+# Проверка варианта 1, этапы 1–4
 
 Откройте терминал в корне Graph. Если Python не найден, задайте
 `PYTHON_EXE` согласно README. В PowerShell ставьте `.\` перед скриптом.
@@ -7,13 +7,17 @@
 | --- | --- | --- |
 | CLI | `.\run.bat --help` | Справка |
 | Конфигурация XML | `config/default.xml` | Все семь настроек в XML |
-| Ключ-значение | `.\run.bat` | Семь строк параметров |
-| Тестовый режим | `.\run.bat --config config/default.xml` | Код 0, test_mode=true |
-| Режим URL | `.\run.bat --config config/remote.xml` | Код 0, test_mode=false |
-| Ошибки семи параметров | `.\demo.bat` | Неверное значение и пропуск каждого тега |
+| Этап 1: параметры | `.\demo.bat` | Семь пар ключ-значение в каждом успешном примере |
+| Этап 1: ошибки параметров | `.\demo.bat` | Неверное значение и пропуск каждого тега |
 | Ошибки XML и файла | `.\demo.bat` | Ожидаемые коды 2 |
-| Автотесты | `.\test.bat` | 38 тестов, OK |
-| Коммит | History в GitHub Desktop | Conventional Commit с областью config |
+| Этап 2: прямые зависимости | `.\run.bat --direct tests/fixtures/config.xml` | Три прямые зависимости |
+| Этап 3: граф | `.\run.bat config/stage3-cycle.xml` | Обход в ширину и цикл D → A |
+| Этап 4: обратный BFS | `.\run.bat --reverse config/stage3-cycle.xml` | D на глубине 1, B и C на глубине 2 |
+| Этап 4: глубина 1 | `.\run.bat --reverse config/stage3-depth.xml` | Только D |
+| Этап 4: цепочка | `.\run.bat --reverse config/stage4-transitive.xml` | SKIP, C, A на глубинах 1, 2, 3 |
+| Этап 4: фильтр | `.\run.bat --reverse config/stage4-filter.xml` | Фильтр SKIP даёт пустой список |
+| Автотесты | `.\test.bat` | OK |
+| Коммит этапа 4 | History в GitHub Desktop | `feat(graph): добавить поиск обратных зависимостей (4 этап)` |
 | Публикация | Сайт Graph после Push origin | Файлы и коммит доступны публично |
 
 Проверка оформления поставки:

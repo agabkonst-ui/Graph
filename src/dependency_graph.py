@@ -1,6 +1,6 @@
 """Build and display a directed dependency graph in BFS order."""
 
-from collections import deque
+from collections import defaultdict, deque
 from dataclasses import dataclass
 
 
@@ -46,6 +46,34 @@ def breadth_first(root, neighbors, max_depth):
                 depths[child] = depth + 1
                 queue.append(child)
     return adjacency, depths
+
+
+def reverse_neighbors(packages, neighbors):
+    """Index incoming edges and return a lookup for the same BFS."""
+    incoming = defaultdict(list)
+    for package in packages:
+        for dependency in neighbors(package):
+            incoming[dependency].append(package)
+
+    def lookup(package):
+        """Return packages with an edge to this package."""
+        return incoming.get(package, ())
+
+    return lookup
+
+
+def print_reverse(root, depths):
+    """Print dependents in BFS order, omitting the selected package."""
+    print(f"Обратные зависимости {root.label()} (BFS):")
+    if not depths:
+        print("Исходный пакет исключён фильтром.")
+        return
+    if all(package == root for package in depths):
+        print("В пределах заданной глубины обратных зависимостей нет.")
+        return
+    for package, depth in depths.items():
+        if package != root:
+            print(f"[{depth}] {package.label()}")
 
 
 def print_graph(adjacency, depths):

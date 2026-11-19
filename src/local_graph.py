@@ -3,7 +3,7 @@
 import re
 from pathlib import Path
 
-from dependency_graph import Package, excluded
+from dependency_graph import Package, excluded, reverse_neighbors
 
 
 TEST_NAME = re.compile(r"[A-Z]+")
@@ -37,7 +37,7 @@ def read_test_graph(path):
     return graph
 
 
-def local_source(config):
+def local_source(config, reverse=False):
     """Return the configured root and the test graph's neighbor function."""
     graph = read_test_graph(config.repository)
     root = Package(config.package_name)
@@ -50,4 +50,10 @@ def local_source(config):
             if not excluded(name, config.filter_substring):
                 yield Package(name)
 
+    if reverse:
+        packages = (
+            Package(name) for name in graph
+            if not excluded(name, config.filter_substring)
+        )
+        return root, reverse_neighbors(packages, neighbors)
     return root, neighbors

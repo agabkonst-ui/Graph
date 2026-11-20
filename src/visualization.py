@@ -69,7 +69,7 @@ def export_graph(adjacency, output):
     source = plantuml_source(adjacency)
     svg = render_svg(source)
     diagram = output.with_suffix(".puml")
-    diagram.write_text(source, encoding="utf-8", newline="\n")
+    diagram.write_bytes(source.encode("utf-8"))
     output.write_bytes(svg)
     print(f"PlantUML: {diagram}")
     print(f"SVG: {output}")
